@@ -1,0 +1,35 @@
+{
+  "name": "@livekit/component-example-next",
+  "version": "0.2.21",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --experimental-https",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@chakra-ui/next-js": "^2.2.0",
+    "@chakra-ui/react": "^2.8.2",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@livekit/components-react": "^2.3.1",
+    "@livekit/components-styles": "workspace:*",
+    "@livekit/react-core": "^1.1.0",
+    "framer-motion": "^11.2.10",
+    "livekit-client": "^2.1.5",
+    "livekit-server-sdk": "^1.2.7",
+    "next": "14.2.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "sass": "^1.77.4"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.14",
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.18",
+    "eslint-config-next": "^12.3.4",
+    "source-map-loader": "^4.0.2",
+    "typescript": "^5.3.3"
+  }
+}
