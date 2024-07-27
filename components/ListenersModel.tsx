@@ -2,7 +2,7 @@ import { Box, Button, Center, Flex, HStack, Input, Textarea, VStack, Checkbox, S
 import React, { ChangeEvent, useEffect, useRef, useState } from 'react'
 import axios from 'axios';
 import { LocalParticipant, RemoteParticipant } from 'livekit-client';
-import { avatarSeed } from '../pages/clubhouse';
+import { avatarSeed } from '../pages/clubhouse2';
 
 const ListenersModel = ({ isOpen, onClose, listeners }: {
     isOpen: boolean;

@@ -73,7 +73,7 @@ const CustomizeExample: NextPage = () => {
 export function Stage() {
   const tracks = useTracks([
     { source: Track.Source.Camera, withPlaceholder: true },
-    { source: Track.Source.ScreenShare, withPlaceholder: false },
+    { source: Track.Source.Unknown, withPlaceholder: true}
   ]);
   return (
     <>

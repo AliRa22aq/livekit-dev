@@ -1,427 +1,126 @@
 import {
-  ConnectionState,
-  ControlBar,
-  GridLayout,
-  LayoutContextProvider,
-  LiveKitRoom,
-  ParticipantContext,
-  ParticipantLoop,
-  RoomAudioRenderer,
-  RoomContext,
-  RoomName,
-  TrackLoop,
-  TrackMutedIndicator,
-  TrackRefContext,
-  TrackReference,
-  TrackReferenceOrPlaceholder,
-  useAudioPlayback,
-  useIsMuted,
-  useIsSpeaking,
-  useLiveKitRoom,
-  useLocalParticipantPermissions,
-  useMaybeParticipantContext,
-  useMaybeTrackRefContext,
-  useParticipantContext,
-  useParticipantTile,
-  useParticipantTracks,
-  useParticipants,
-  useRoomContext,
-  useToken,
-  useTrackByName,
-  useTrackRefContext,
-  useTracks,
-} from '@livekit/components-react';
-import styles from '../styles/Clubhouse.module.scss';
-import { Track, LocalParticipant, RemoteParticipant, RoomOptions } from 'livekit-client';
-import { useEffect, useMemo, useState } from 'react';
-import { generateRandomUserId } from '../lib/helper';
-import { useSearchParams } from 'next/navigation';
-import { Box, Button, Center, Divider, Flex, HStack, Image, VStack, useDisclosure } from '@chakra-ui/react';
-import { useRoom } from '@livekit/react-core';
-import ListenersModel from '../components/ListenersModel';
-
-import { Room, Participant, LocalTrackPublication, RemoteTrackPublication } from 'livekit-client';
-
-
-export const avatarSeed = ["Loki", "Mimi", "Princess", "Abby", "Jasmine", "Miss kitty", "Annie", "Garfield"]
-
-const adminIdentity = "ali"
-const admin_image = avatarSeed[Math.floor(Math.random() * avatarSeed.length)]
-const user_image = avatarSeed[Math.floor(Math.random() * avatarSeed.length)]
-
-// enum UserCategories {
-//   ADMIN, 
-//   COADMIN, 
-//   SPEAKER, 
-//   LISTENER
-// }
-
-
-const Clubhouse = () => {
+    ControlBar,
+    LiveKitRoom,
+    RoomAudioRenderer,
+    RoomName,
+    TrackLoop,
+    TrackMutedIndicator,
+    useIsMuted,
+    useIsSpeaking,
+    useToken,
+    useTrackRefContext,
+    useTracks,
+  } from '@livekit/components-react';
+  import styles from '../styles/Clubhouse.module.scss';
+  import { Track } from 'livekit-client';
+  import { useMemo, useState } from 'react';
+  import { generateRandomUserId } from '../lib/helper';
   
-  const params = useSearchParams();
+  const Clubhouse = () => {
+    
+    const params = typeof window !== 'undefined' ? new URLSearchParams(location.search) : null;
+    const roomName = params?.get('room') ?? 'test-room';
+    const userIdentity = params?.get('user') ?? generateRandomUserId();
   
-  const roomName = params?.get('room') ?? 'PlanetMoon';
-  const userIdentity = params?.get('user')!;
+    const token = useToken(process.env.NEXT_PUBLIC_LK_TOKEN_ENDPOINT, roomName, {
+      userInfo: {
+        identity: userIdentity,
+        name: userIdentity,
+      },
+    });
   
+    const [tryToConnect, setTryToConnect] = useState(false);
+    const [connected, setConnected] = useState(false);
   
-  // console.log("userIdentity: ", userIdentity);
-  
-  const [tryToConnect, setTryToConnect] = useState(false);
-  const [connected, setConnected] = useState(false);
-  const [coAdminIdentities, setCoAdminIdentities] = useState<string[]>([]);
-
-  const token = useToken(process.env.NEXT_PUBLIC_LK_TOKEN_ENDPOINT, roomName, {
-    userInfo: {
-      identity: userIdentity,
-      name: userIdentity,
-    },
-  });
-  const [room] = useState(new Room());
-
-  return (
-    <div data-lk-theme="default" className={styles.container}>
-      <LiveKitRoom
-        room={room}
-        token={token}
-        serverUrl={process.env.NEXT_PUBLIC_LK_SERVER_URL}
-        connect={tryToConnect}
-        video={false}
-        // audio={adminIdentity === adminIdentity ? true : false}
-        audio={true}
-        // simulateParticipants={25}
-        onConnected={() => setConnected(true)}
-        onDisconnected={() => {
-          setTryToConnect(false);
-          setConnected(false);
-        }}
-      >
-        <div style={{ display: 'grid', placeContent: 'center', height: '100%' }}>
-          <button
-            className="lk-button"
-            onClick={() => {
-              setTryToConnect(true);
-            }}
-          >
-            Enter Room
-          </button>
-        </div>
-
-        {/* <ConnectionState /> */}
-
-        <Box className={styles.slider} style={{ bottom: connected ? '0px' : '-100%' }} border="1px solid yellow" p="16px">
-
-          <Center fontSize="16px" m="12px">
-            {roomName} Audio AMA
-          </Center>
-
-  
-            <Stage userIdentity={userIdentity} />
-
-
-
-
-          <CustomControlBar userIdentity={userIdentity}/>
-
-          <RoomAudioRenderer />
-
-
-
-        </Box>
-
-
-      </LiveKitRoom>
-    </div>
-  );
-};
-
-const Stage = ({userIdentity}:{userIdentity: string}) => {
-
-  // const tracksReferences = useTracks([Track.Source.Microphone]);
-  // console.log("tracksReferences: ", tracksReferences);
-  // const adminTrackReference = tracksReferences.find((trackRef) => trackRef.participant.name === admin);
-
-  // const trackReferences = useTracks([Track.Source.Microphone]);
-
-  // const {get} = useTra();
-  // const admin = trackReferences.find((trackRef) => trackRef.participant.name === adminIdentity);
-
-  // const listeners = participants.filter((participant) => participant.name !== admin)
-
-
-  return (
-    <Box border="1px solid transparent">
-
-        
-        <CustomAdminTile />
-        <CustomParticipantsTile userIdentity={userIdentity} />
-
-
-      {
-        // tracksReferences.map((trackRef) => {
-
-
-
-
-        //   const isSpeaking = trackRef.participant.isSpeaking;
-        //   const isMuted = trackRef.publication.isMuted;
-        //   const avatarSeed = ["Loki", "Mimi", "Princess", "Abby", "Jasmine", "Miss kitty", "Annie", "Garfield"]
-        //   const id = avatarSeed[Math.floor(Math.random())];
-
-        //   return (
-        //     <section title={trackRef.participant.name} >
-
-        //       <VStack spacing={0} >
-
-        //         <Box boxSize={100} >
-        //           <Box
-        //             borderRadius="50px"
-        //             border="3px solid transparent" borderColor={isSpeaking ? 'grey' : 'transparent'}
-        //             as="img"
-        //             src={`https://api.dicebear.com/8.x/adventurer/svg?seed=${id}`}
-        //             className="fade-in"
-        //             width={100}
-        //             height={100}
-        //             alt={`Avatar of user: ${trackRef.participant.identity}`}
-        //           />
-        //         </Box>
-        //         <Box>{trackRef.participant.name}</Box>
-        //       </VStack>
-
-        //       <Flex style={{ opacity: isMuted ? 1 : 0 }} justify="end">
-        //         <TrackMutedIndicator trackRef={trackRef}></TrackMutedIndicator>
-        //       </Flex>
-
-        //     </section>
-        //   )
-        // })
-      }
-
-      {/* <TrackLoop tracks={tracksReferences}>
-          <CustomParticipantTile />
-        </TrackLoop> */}
-    </Box>
-  );
-};
-
-const CustomAdminTile = () => {
-
-  // const adminTrackRef =  useTrackRefContext();
-  
-  // const adminTrackRef = useMaybeTrackRefContext();
-  // const participatContext = useParticipantContext();
-  const participants = useParticipants();
-  const admin = participants.find((participant) => participant.identity === adminIdentity)
-  // const isMuted = useIsMuted(adminTrackRef);
-
-  // const tracks = useTracks([
-  //   { source: Track.Source.Camera, withPlaceholder: true },
-  //   { source: Track.Source.ScreenShare, withPlaceholder: false },
-  // ]);
-
-
-  // let isMuted: boolean | undefined = undefined;
-  // const trackReferences = useMaybeTrackRefContext();
-  // console.log("trackReferences: ", trackReferences);
-
-  // if(trackReferences){
-  // }
-  
-  
-  // const isSpeaking = useIsSpeaking(admin);
-  
-  if (!admin) {
-    return <Box />
-  }
-
-  return (
-    <>
-
-      <section title={admin.name}>
-
-        <Box border="1px solid transparent">
-          <Box> Admin </Box>
-
-          <VStack spacing={0} w="70px">
-            <Box
-              as="img"
-              borderRadius="50px"
-              border="3px solid transparent"
-              borderColor={admin.isSpeaking ? 'grey' : 'transparent'}
-              src={`https://api.dicebear.com/8.x/adventurer/svg?seed=${admin_image}`}
-              className="fade-in"
-              width={70}
-              height={70}
-              alt={`Avatar of user: ${admin.identity}`}
-            />
-            <Box>{admin.name}</Box>
-          </VStack>
-
-        </Box>
-
-        {
-          // adminTrackRef && (
-            // <Flex style={{ opacity: isMuted ? 1 : 0 }} justify="end">
-            //   <TrackMutedIndicator trackRef={adminTrackRef}></TrackMutedIndicator>
-            // </Flex>
-          // )
-        }
-
-
-      </section>
-
-      {/* <section title={admin.name}>
-
-        <Box border="1px solid transparent">
-          <Box> Admin </Box>
-
-          <VStack spacing={0} w="70px">
-            <Box
-              as="img"
-              borderRadius="50px"
-              border="3px solid transparent"
-              borderColor={admin.isSpeaking ? 'grey' : 'transparent'}
-              src={`https://api.dicebear.com/8.x/adventurer/svg?seed=${admin_image}`}
-              className="fade-in"
-              width={70}
-              height={70}
-              alt={`Avatar of user: ${admin.identity}`}
-            />
-            <Box>{admin.name}</Box>
-          </VStack>
-
-        </Box>
-
-        {
-          adminTrackRef && (
-          <Flex style={{ opacity: isMuted ? 1 : 0 }} justify="end">
-            <TrackMutedIndicator trackRef={trackReferences}></TrackMutedIndicator>
-          </Flex>
-          )
-        }
-
-
-      </section> */}
-      <Divider bgColor="white" />
-    </>
-  );
-};
-
-const CustomParticipantsTile = ({userIdentity}:{userIdentity: string}) => {
-
-  const participants = useParticipants();
-  const listeners = participants.filter((participant) => participant.name !== adminIdentity)
-  const listenersModal = useDisclosure();
-
-  return (
-    <>
-      <Box borderBottom="1px solid black" >
-        
-        {
-          adminIdentity === userIdentity ?
-            <Box cursor="pointer" onClick={() => listenersModal.onOpen()}> Listeners </Box> :
-            <Box> Listeners </Box>
-        }
-
-        <Flex w="full" flexWrap="wrap" overflowY="scroll" maxH="250px">
-          {
-            listeners.map((listener, index) => {
-              return (
-                <VStack title={listener.name} w="70px" spacing={0} key={index} width={100}>
-                  <Box
-                    borderRadius="50px"
-                    border="3px solid transparent"
-                    borderColor={listener.isSpeaking ? 'grey' : 'transparent'}
-                    as="img"
-                    src={`https://api.dicebear.com/8.x/adventurer/svg?seed=${user_image}`}
-                    className="fade-in"
-                    width={70}
-                    height={70}
-                    alt={`Avatar of user: ${listener.identity}`}
-                  />
-                  <Box>{listener.name}</Box>
-                </VStack>
-              )
-            })
-          }
-        </Flex>
-      </Box>
-      <Divider bgColor="white" />
-    </>
-  );
-};
-
-const CustomControlBar = ({userIdentity}:{userIdentity: string}) => {
-
-
-  // const tracks = useTracks([{
-  //   source: Track.Source.Microphone, withPlaceholder: false
-  // }]);
-  
-  // tracks.map((track) => {
-  //   // track.publication?.handleMuted()
-  //   console.log("track.publication?.isMuted: ", )
-  // })
-
-  // const room = useRoomContext();
-
-  // const muteAllParticipants = () => {
-  //   if (room) {
-  //     // Mute remote participants
-  //     room.remoteParticipants.forEach((participant) => {
-  //       muteParticipant(participant);
-  //     });
-
-  //     // Mute local participant
-  //     muteParticipant(room.localParticipant);
-  //   }
-  // };
-
-  // const muteParticipant = (participant: Participant) => {
-  //   participant.getTrackPublications().forEach((track) => {
-  //     if (track.kind === 'audio') {
-  //       track.audioTrack?.setAudioContext(undefined);
-  //     }
-  //   });
-  // };
-  // const participantTracks = useParticipantTracks([Track.Source.Microphone], "alina")
-  // // const room = useRoom();
-
-  // const handleMute = () => {
-  //   participantTracks.map(({ publication }) => {
-  //     if (publication.track?.kind == "audio") {
-  //       publication.handleMuted();
-  //     }
-  //   })
-  // }
-
-  if(adminIdentity === userIdentity){
     return (
-        <HStack w="full" justify="space-between">
+      <div data-lk-theme="default" className={styles.container}>
+        <LiveKitRoom
+          token={token}
+          serverUrl={process.env.NEXT_PUBLIC_LK_SERVER_URL}
+          connect={tryToConnect}
+          video={false}
+          audio={true}
+          // simulateParticipants={15}
+          onConnected={() => setConnected(true)}
+          onDisconnected={() => {
+            setTryToConnect(false);
+            setConnected(false);
+          }}
+        >
+          <div style={{ display: 'grid', placeContent: 'center', height: '100%' }}>
+            <button
+              className="lk-button"
+              onClick={() => {
+                setTryToConnect(true);
+              }}
+            >
+              Enter Room
+            </button>
+          </div>
   
-          <ControlBar
-            variation='minimal'
-            controls={{ microphone: true, camera: false, screenShare: false, leave: true, chat: false }}
-            about='blabla'
-          />
+          <div className={styles.slider} style={{ bottom: connected ? '0px' : '-100%' }}>
+            <h1>
+              <RoomName />
+            </h1>
+            <Stage />
+            <ControlBar
+              variation="minimal"
+              controls={{ microphone: true, camera: false, screenShare: false }}
+            />
+            <RoomAudioRenderer />
+          </div>
+        </LiveKitRoom>
+      </div>
+    );
+  };
   
-          <Button size="sm" mx="10px" bgColor="#444444" color="white">
-            Mute AMA
-          </Button>
+  const Stage = () => {
+    const tracksReferences = useTracks([Track.Source.Microphone]);
+    return (
+      <div className="">
+        <div className={styles.stageGrid}>
+          <TrackLoop tracks={tracksReferences}>
+            <CustomParticipantTile></CustomParticipantTile>
+          </TrackLoop>
+        </div>
+      </div>
+    );
+  };
   
-        </HStack>
-      )
-  }
-  return (
-    <HStack w="full" justify="end">
-      <ControlBar
-        variation='minimal'
-        controls={{ microphone: true, camera: false, screenShare: false, leave: true, chat: false }}
-        about='blabla'
-      />
-    </HStack>
-  )
-}
-
-
-export default Clubhouse;
+  const CustomParticipantTile = () => {
+    const trackRef = useTrackRefContext();
+    const isSpeaking = useIsSpeaking(trackRef.participant);
+    const isMuted = useIsMuted(trackRef);
+  
+    const id = useMemo(() => trackRef.participant.identity, [trackRef.participant.identity]);
+  
+    return (
+      <section className={styles['participant-tile']} title={trackRef.participant.name}>
+        <div
+          // className={`rounded-full border-2 p-0.5 transition-colors duration-1000 ${
+          className={styles['avatar-container']}
+          style={{ borderColor: isSpeaking ? 'greenyellow' : 'transparent' }}
+        >
+          <div
+            className={styles.avatar}
+            // className="z-10 grid aspect-square items-center overflow-hidden rounded-full bg-beige transition-all will-change-transform"
+          >
+            <img
+              src={`https://avatars.dicebear.com/api/avataaars/${id}.svg?mouth=default,smile,tongue&eyes=default,happy,hearts&eyebrows=default,defaultNatural,flatNatural`}
+              className="fade-in"
+              width={150}
+              height={150}
+              alt={`Avatar of user: ${trackRef.participant.identity}`}
+            />
+          </div>
+        </div>
+  
+        <div style={{ opacity: isMuted ? 1 : 0 }} className={styles['mic-container']}>
+          <div>
+            <TrackMutedIndicator className={styles.mic} trackRef={trackRef}></TrackMutedIndicator>
+          </div>
+        </div>
+      </section>
+    );
+  };
+  export default Clubhouse;
